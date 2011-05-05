@@ -26,6 +26,10 @@ module Sequel
       end
       alias_method :do, :execute
 
+      def tables(opts={})
+        execute('SHOW TABLES')
+      end
+
       private
 
       def disconnect_connection(c)
@@ -37,10 +41,15 @@ module Sequel
       SELECT_CLAUSE_METHODS = clause_methods(:select, %w'distinct columns from join where group having compounds order limit')
       
       def fetch_rows(sql)
+        p @opts
         execute(sql) do |result|
           begin
             width = result.first.size
-            @columns = (0..width).to_a
+            if @opts[:select] == :* || @opts[:select].nil?
+              @columns =  (0..width).to_a
+            else
+              @columns = @opts[:select]
+            end
             result.each do |r|
               row = {}
               r.each_with_index {|v, i| row[@columns[i]] = v}
